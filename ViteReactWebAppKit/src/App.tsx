@@ -1,33 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { NavBar } from "antd-mobile";
+import { useEffect } from "react";
+import { Route, Routes, useNavigate } from "react-router";
+import PwaComponent from "./components/PwaComponent";
+import { routes } from './config/configure';
+import { serviceWorkers } from './pwa/serviceWorkerInNavigator.ts';
+import usePushNotification from './pwa/usePushNotification';
+import NotificationForm from "./pages/Demos/NotificationForm/index.tsx";
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const navigate = useNavigate();
+  // Notification
+  usePushNotification();
+  // router
+  const RenderRouter = () => {
+    // old router
+    {/*
+       <Route path="/" element={<Layouts />}>
+          <Route index path="/" element={<Welcome />} />
+          <Route path="/mobile" element={<MobileLayouts />}>
+            <Route index path="/mobile/demo" element={<DemoUI />} />
+            <Route path="/mobile/redux" element={<ReduxDemo />} />
+          </Route>
+          <Route path="/desktop" element={<DesktopLayouts />}>
+            <Route index path="/desktop/demo" element={<DemoUI />} />
+            <Route path="/desktop/redux" element={<ReduxDemo />} />
+          </Route>
+          <Route path="*" element={<Error404 />} />
+        </Route> 
+      */}
+    // new router
+    return (
+      <>
+        <Routes>
+          {routes.map((route) => {
+            return <Route key={route.path} path={route.path} element={<route.component />}>
+              {route.children.map((children) => {
+                return children.children ? (
+                  <Route key={children.path} path={children.path} element={<children.component />}>
+                    {children.children.map((child) => {
+                      return <Route key={`${children.path}-${child.path}`} path={`${children.path}/${child.path}`} element={<child.component />} />;
+                    })}
+                  </Route>
+                ) : <Route key={children.path} path={children.path} element={<children.component />} />;
+              })}
+            </Route>;
+          })}
+        </Routes>
+      </>
+    );
+  };
 
+  useEffect(() => {
+    serviceWorkers();
+  }, []);
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <NavBar back='Back' onBack={() => navigate(-1)}>
+        Title
+      </NavBar>
+      <NotificationForm />
+      <PwaComponent />
+      <RenderRouter />
     </>
   )
 }
